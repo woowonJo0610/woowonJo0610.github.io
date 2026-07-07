@@ -61,24 +61,41 @@
         transition: 0.2s;
       }
       .shake {
-        animation: shake 0.4s;
+        animation: shake 0.8s ease-in-out;
       }
       @keyframes shake {
-        0%,
-        100% {
-          transform: rotate(0);
+        0% {
+          transform: rotate(0) scale(1);
+        }
+        10% {
+          transform: rotate(-8deg) scale(1.02);
         }
         20% {
-          transform: rotate(-6deg);
+          transform: rotate(8deg) scale(1.02);
+        }
+        30% {
+          transform: rotate(-8deg) scale(1.03);
         }
         40% {
-          transform: rotate(6deg);
+          transform: rotate(8deg) scale(1.03);
+        }
+        50% {
+          transform: rotate(-7deg) scale(1.04);
         }
         60% {
-          transform: rotate(-4deg);
+          transform: rotate(7deg) scale(1.04);
+        }
+        70% {
+          transform: rotate(-5deg) scale(1.02);
         }
         80% {
-          transform: rotate(4deg);
+          transform: rotate(5deg) scale(1.01);
+        }
+        90% {
+          transform: rotate(-2deg);
+        }
+        100% {
+          transform: rotate(0);
         }
       }
       button {
@@ -119,6 +136,45 @@
         height: 100%;
         width: 0;
         background: #14ff6a;
+      }
+      .legendary {
+        color: #ffd700;
+        font-weight: bold;
+        text-shadow:
+          -1px -1px 0 #000,
+          1px -1px 0 #000,
+          -1px 1px 0 #000,
+          1px 1px 0 #000;
+      }
+
+      .epic {
+        color: #ff3b30;
+        font-weight: bold;
+        text-shadow:
+          -1px -1px 0 #000,
+          1px -1px 0 #000,
+          -1px 1px 0 #000,
+          1px 1px 0 #000;
+      }
+
+      .rare {
+        color: #1e90ff;
+        font-weight: bold;
+        text-shadow:
+          -1px -1px 0 #000,
+          1px -1px 0 #000,
+          -1px 1px 0 #000,
+          1px 1px 0 #000;
+      }
+
+      .normal {
+        color: #666;
+        font-weight: bold;
+        text-shadow:
+          -1px -1px 0 #fff,
+          1px -1px 0 #fff,
+          -1px 1px 0 #fff,
+          1px 1px 0 #fff;
       }
     </style>
   </head>
@@ -167,7 +223,6 @@
           style="
             margin-top: 20px;
             padding-top: 15px;
-            border-top: 2px solid #ddd;
             font-size: 22px;
             font-weight: bold;
             display: flex;
@@ -181,6 +236,50 @@
       <div class="right">
         <button onclick="openOne()">직접 열기</button>
         <button onclick="open10()">10개 열기</button>
+        <div
+          id="stats"
+          style="
+            background: #dce3f3;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            line-height: 1.8;
+          "
+        >
+          <div style="display: flex; justify-content: space-between">
+            <span>📦 총 개봉 수</span>
+            <span id="totalOpen">0개</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between">
+            <span>🔑 총 열쇠 개수</span>
+            <span id="totalKeys">0개</span>
+          </div>
+
+          <hr />
+
+          <div style="display: flex; justify-content: space-between">
+            <span class="legendary">🟨 레전더리 (800)</span>
+            <span id="cnt800" class="legendary">0</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between">
+            <span class="epic">🟥 에픽 (20)</span>
+            <span id="cnt20" class="epic">0</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between">
+            <span class="rare">🟦 레어 (3)</span>
+            <span id="cnt3" class="rare">0</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between">
+            <span class="normal">⬜ 노멀 (1)</span>
+            <span id="cnt1" class="normal">0</span>
+          </div>
+        </div>
+
         <h3>개봉 로그</h3>
         <button
           onclick="clearLog()"
@@ -193,7 +292,7 @@
     </div>
 
     <script>
-      let owned = 10,
+      let owned = 100,
         boost = 0;
       const rates = [
         { a: 800, p: 0.02 },
@@ -217,6 +316,20 @@
       function draw() {
         document.getElementById('boxes').value = owned;
         document.getElementById('bar').style.width = Math.min(boost, 100) + '%';
+
+        const totalOpen = count[800] + count[20] + count[3] + count[1];
+
+        document.getElementById('totalOpen').innerText = totalOpen + '개';
+
+        document.getElementById('cnt800').innerText = count[800];
+        document.getElementById('cnt20').innerText = count[20];
+        document.getElementById('cnt3').innerText = count[3];
+        document.getElementById('cnt1').innerText = count[1];
+
+        // 🔑 총 획득 열쇠 개수
+        const totalKeys = count[800] * 800 + count[20] * 20 + count[3] * 3 + count[1];
+
+        document.getElementById('totalKeys').innerText = totalKeys.toLocaleString() + '개';
       }
 
       function roll() {
@@ -237,48 +350,104 @@
         owned--;
 
         let b = document.getElementById('box');
+        let result = document.getElementById('result');
+
+        // 이전 10개 열기 결과 제거
+        document.getElementById('summary').innerHTML = '';
+
+        // 결과 숨기기
+        result.innerHTML = '';
+
         b.classList.add('shake');
-        setTimeout(() => b.classList.remove('shake'), 400);
 
-        let r = roll();
+        // 흔들림 끝난 후 결과 공개
+        setTimeout(() => {
+          b.classList.remove('shake');
 
-        // 부스트 발동
-        if (boost >= 100) {
-          r *= 2;
-          boost = 0;
+          let r = roll();
+          const origin = r; // 원래 등급 저장
 
-          document.getElementById('result').innerHTML =
-            '🔥 스페셜 부스트 발동!<br>🎉 ' + r + '개 획득!';
-        } else {
-          const prevBoost = boost;
-          boost = Math.min(boost + 10, 100);
+          if (boost >= 100) {
+            r *= 2;
+            boost = 0;
 
-          if (prevBoost < 100 && boost === 100) {
-            alert('🚨 홀리 쓋!!!!!!\n\n🔥 다음 개봉 상자는 x2배 입니다!!!');
+            switch (r) {
+              case 1600:
+                result.innerHTML =
+                  '<span style="color:#ffd700">🔥🟨 레전더리 x2!!!!!<br>1600개 획득!!!!!</span>';
+                break;
+
+              case 40:
+                result.innerHTML =
+                  '<span style="color:#ff3b30">🔥🟥 에픽 x2!!!!<br>40개 획득!!!!</span>';
+                break;
+
+              case 6:
+                result.innerHTML =
+                  '<span style="color:#1e90ff">🔥🟦 레어 x2!!!<br>6개 획득!!!</span>';
+                break;
+
+              case 2:
+                result.innerHTML =
+                  '<span style="color:#ffffff">🔥⬜ 노멀 x2!!<br>2개 획득!!</span>';
+                break;
+            }
+          } else {
+            const prevBoost = boost;
+            boost = Math.min(boost + 10, 100);
+
+            if (prevBoost < 100 && boost === 100) {
+              alert('🚨 홀리 쓋!!!!!!\n\n🔥 다음 개봉 상자는 x2배 입니다!!!');
+            }
+
+            switch (r) {
+              case 800:
+                result.innerHTML =
+                  '<span style="color:#ffd700">🟨 레전더리!!!!<br>800개 획득!!!!</span>';
+                break;
+
+              case 20:
+                result.innerHTML = '<span style="color:#ff3b30">🟥 에픽!!!<br>20개 획득!!!</span>';
+                break;
+
+              case 3:
+                result.innerHTML = '<span style="color:#1e90ff">🟦 레어!!<br>3개 획득!!</span>';
+                break;
+
+              case 1:
+                result.innerHTML = '<span style="color:#ffffff">⬜ 노멀!<br>1개 획득!</span>';
+                break;
+            }
           }
 
-          document.getElementById('result').innerHTML = '🎉 ' + r + '개 획득!';
-        }
-
-        count[r] = (count[r] || 0) + 1;
-
-        document.getElementById('result').innerHTML = '🎉 ' + r + '개 획득!';
-
-        addLog(new Date().toLocaleTimeString() + ' - ' + r + '개');
-
-        draw();
+          count[origin]++;
+          addLog(new Date().toLocaleTimeString() + ' - ' + r + '개');
+          draw();
+        }, 800); // ← shake 시간과 동일하게
       }
+
       function openOne() {
         once();
       }
+
       function open10() {
         if (owned <= 0) return;
 
-        let openCnt = Math.min(10, owned);
+        // 스페셜 부스트가 아직 안 찼다면
+        let openCnt;
+
+        if (boost < 100) {
+          // 100%까지 필요한 개수 (10%씩 차니까)
+          const need = Math.ceil((100 - boost) / 10);
+
+          openCnt = Math.min(need, 10, owned);
+        } else {
+          // 이미 부스트가 차있으면 그냥 10개
+          openCnt = Math.min(10, owned);
+        }
 
         owned -= openCnt;
 
-        let list = [];
         let total = {
           800: 0,
           20: 0,
@@ -290,6 +459,7 @@
 
         for (let i = 0; i < openCnt; i++) {
           let r = roll();
+          const origin = r;
 
           // 부스트 발동
           if (boost >= 100) {
@@ -304,8 +474,8 @@
             }
           }
 
-          count[r] = (count[r] || 0) + 1;
-          total[r] = (total[r] || 0) + 1;
+          count[origin]++;
+          total[origin]++;
 
           addLog(new Date().toLocaleTimeString() + ' - ' + r + '개');
         }
