@@ -48,17 +48,21 @@
         font-weight: bold;
       }
       .box {
-        width: 220px;
-        height: 150px;
-        margin: 20px auto;
-        background: linear-gradient(135deg, #4d63ff, #1a28b8);
-        border-radius: 12px;
+        width: 260px;
+        height: 260px;
+        background: none;
         display: flex;
-        align-items: center;
         justify-content: center;
-        color: #fff;
-        font-size: 28px;
-        transition: 0.2s;
+        align-items: center;
+        margin: 20px auto;
+      }
+      .box img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        user-select: none;
+        pointer-events: none;
+        filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.45));
       }
       .shake {
         animation: shake 0.8s ease-in-out;
@@ -127,15 +131,22 @@
         border-radius: 6px;
       }
       .progress {
+        display: flex;
+        gap: 3px;
         height: 20px;
         background: #444;
         border-radius: 10px;
-        overflow: hidden;
+        padding: 3px;
+        box-sizing: border-box;
       }
-      .bar {
-        height: 100%;
-        width: 0;
+      .cell {
+        flex: 1;
+        background: #222;
+        border-radius: 3px;
+      }
+      .cell.active {
         background: #14ff6a;
+        box-shadow: 0 0 6px #14ff6a;
       }
       .legendary {
         color: #ffd700;
@@ -183,7 +194,18 @@
       <div><h2>상자 열기</h2></div>
       <div style="width: 300px">
         <div>스페셜 부스트 x2</div>
-        <div class="progress"><div class="bar" id="bar"></div></div>
+        <div class="progress">
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+          <div class="cell"></div>
+        </div>
       </div>
       <div>
         보유 상자 :
@@ -214,7 +236,12 @@
       </div>
 
       <div class="center">
-        <div id="box" class="box">26TOTS BOX</div>
+        <div id="box" class="box">
+          <img
+            src="https://ssl.nexon.com/s2/game/fc/online/event/2026/260625_special_key_c4956ow6f01/item/ticket_1.png"
+            alt="26TOTS 프리미엄 열쇠 상자"
+          />
+        </div>
         <h2>26TOTS 프리미엄 열쇠 상자</h2>
         <div id="result"></div>
 
@@ -280,7 +307,15 @@
           </div>
         </div>
 
+        <button
+          onclick="resetStats()"
+          style="background: #673ab7; color: #fff; font-size: 14px; padding: 8px"
+        >
+          📊 기록 초기화
+        </button>
+
         <h3>개봉 로그</h3>
+
         <button
           onclick="clearLog()"
           style="width: auto; margin: 0; padding: 6px 12px; background: #e53935; font-size: 14px"
@@ -293,7 +328,7 @@
 
     <script>
       let owned = 100,
-        boost = 0;
+        boost = 20;
       const rates = [
         { a: 800, p: 0.02 },
         { a: 20, p: 2.5 },
@@ -315,7 +350,15 @@
 
       function draw() {
         document.getElementById('boxes').value = owned;
-        document.getElementById('bar').style.width = Math.min(boost, 100) + '%';
+        const cells = document.querySelectorAll('.cell');
+
+        cells.forEach((cell, index) => {
+          if (index < boost / 10) {
+            cell.classList.add('active');
+          } else {
+            cell.classList.remove('active');
+          }
+        });
 
         const totalOpen = count[800] + count[20] + count[3] + count[1];
 
@@ -505,6 +548,32 @@
 
       function clearLog() {
         document.getElementById('log').innerHTML = '';
+      }
+
+      function resetStats() {
+        if (!confirm('📊 개봉 기록을 초기화 할까요?')) {
+          return;
+        }
+
+        // 등급 카운트 초기화
+        count[800] = 0;
+        count[20] = 0;
+        count[3] = 0;
+        count[1] = 0;
+
+        // 부스트 초기화
+        boost = 20;
+
+        // 결과 제거
+        document.getElementById('result').innerHTML = '';
+
+        // 10개 열기 결과 제거
+        document.getElementById('summary').innerHTML = '';
+
+        // 로그 제거
+        document.getElementById('log').innerHTML = '';
+
+        draw();
       }
 
       draw();
